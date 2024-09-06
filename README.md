@@ -8,4 +8,5 @@
 <li>Next to each song you will need to add the functionality to like the song. From then on, whenever the song appears, the "like" status should reflect the one saved in Redux</li>
 <li>[EXTRA] Save in the Redux store also the search results you get from the API.</li>
 <li>[EXTRA] The ability to add songs to other playlists than the normal playback queue</li>
+<li>[PERSONAL EXTRA] The ability of the player to have all control button functionality, that includes shuffle function, repeat functions, next function, prev function, play/pause function.</li>
 </ul>

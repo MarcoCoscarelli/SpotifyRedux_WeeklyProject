@@ -6,18 +6,38 @@ import { selectSong } from "../redux/actions/playerActions";
 const Player = () => {
   const dispatch = useDispatch();
   const song = useSelector((state) => state.player.selectedSong);
-  const playlist = useSelector((state) => state.player.playlist); // Playlist completa
-  const currentIndex = playlist.findIndex((track) => track.id === song.id); // Indice del brano corrente
-
-  const coverSmall = song.album && song.album.cover_small;
-  const title = song.title || "";
-  const artistName = (song.artist && song.artist.name) || "";
-
+  const playlist = useSelector((state) => state.player.playlist); 
+  const favourites = useSelector((state) => state.favourites.favourites);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(1); 
   const [currentTime, setCurrentTime] = useState(0); 
   const [duration, setDuration] = useState(0); 
+  const [isShuffle, setIsShuffle] = useState(false); 
+  const [isRepeat, setIsRepeat] = useState(false); 
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (favourites.length > 0) {
+      // 
+      dispatch({ type: 'SET_PLAYLIST', payload: favourites });
+    }
+  }, [favourites, dispatch]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.load();
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  }, [song]);
+
+  useEffect(() => {
+    if (isRepeat && audioRef.current) {
+      audioRef.current.loop = true; 
+    } else if (audioRef.current) {
+      audioRef.current.loop = false; 
+    }
+  }, [isRepeat]);
 
   const handlePlayPause = () => {
     if (audioRef.current.paused) {
@@ -30,15 +50,31 @@ const Player = () => {
   };
 
   const handleNext = () => {
-    if (currentIndex < playlist.length - 1) {
-      dispatch(selectSong(playlist[currentIndex + 1])); // Seleziona la canzone successiva
+    if (playlist.length > 0) {
+      let nextIndex;
+      if (isShuffle) {
+        nextIndex = Math.floor(Math.random() * playlist.length); 
+      } else {
+        nextIndex = (playlist.findIndex((track) => track.id === song.id) + 1) % playlist.length; 
+      }
+      dispatch(selectSong(playlist[nextIndex])); 
     }
   };
 
   const handlePrevious = () => {
-    if (currentIndex > 0) {
-      dispatch(selectSong(playlist[currentIndex - 1])); // Seleziona la canzone precedente
+    if (playlist.length > 0) {
+      const currentIndex = playlist.findIndex((track) => track.id === song.id);
+      const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length; // Ciclo le tracce
+      dispatch(selectSong(playlist[prevIndex])); 
     }
+  };
+
+  const handleShuffle = () => {
+    setIsShuffle(!isShuffle); 
+  };
+
+  const handleRepeat = () => {
+    setIsRepeat(!isRepeat); 
   };
 
   const handleVolumeChange = (event) => {
@@ -54,13 +90,14 @@ const Player = () => {
     setDuration(audioRef.current.duration);
   };
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.load();
-      audioRef.current.play();
-      setIsPlaying(true);
+  
+  const handleEnded = () => {
+    if (isRepeat) {
+      audioRef.current.play(); 
+    } else {
+      handleNext(); 
     }
-  }, [song]);
+  };
 
   if (!song || song.length === 0) {
     return null;
@@ -73,10 +110,10 @@ const Player = () => {
     <Container fluid className="fixed-bottom bg-container pt-md-1">
       <Row>
         <Col lg={3} className="d-flex align-items-center offset-md-2">
-          <img src={coverSmall} alt="album cover" className="mr-3" style={{ width: '60px' }} />
+          <img src={song.album?.cover_small} alt="album cover" className="mr-3" style={{ width: '60px' }} />
           <div>
-            <div className="font-weight-bold text-light">{title}</div>
-            <div className="text-light">{artistName}</div>
+            <div className="font-weight-bold text-light">{song.title || ""}</div>
+            <div className="text-light">{song.artist?.name || ""}</div>
           </div>
         </Col>
         <Col lg={7}>
@@ -84,8 +121,8 @@ const Player = () => {
             <Col xs={12} md={8} lg={6} className="offset-md-3 mt-md-1" id="playerControls">
               <Row className="iconsImg justify-content-center">
                 <Col xs={1} className="col-sm-1">
-                  <a href="#">
-                    <img src="/assets/images/playerbuttons/Shuffle.png" alt="shuffle" />
+                  <a href="#" onClick={handleShuffle}>
+                    <img src={isShuffle ? "/assets/images/playerbuttons/ShuffleOn.png" : "/assets/images/playerbuttons/Shuffle.png"} alt="shuffle" />
                   </a>
                 </Col>
                 <Col xs={1} className="col-sm-1">
@@ -104,8 +141,8 @@ const Player = () => {
                   </a>
                 </Col>
                 <Col xs={1} className="col-sm-1">
-                  <a href="#">
-                    <img src="/assets/images/playerbuttons/Repeat.png" alt="repeat" />
+                  <a href="#" onClick={handleRepeat}>
+                    <img src={isRepeat ? "/assets/images/playerbuttons/RepeatOn.png" : "/assets/images/playerbuttons/Repeat.png"} alt="repeat" />
                   </a>
                 </Col>
                 <Col xs={1} className="col-sm-1">
@@ -139,6 +176,7 @@ const Player = () => {
           <audio
             ref={audioRef}
             onTimeUpdate={handleTimeUpdate}
+            onEnded={handleEnded}
           >
             <source src={song.preview} type="audio/mpeg" />
           </audio>

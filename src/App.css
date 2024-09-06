@@ -284,11 +284,11 @@ a:hover {
   color: white !important;
   background-color: #414141;
   height: 3px;
-  width: 100%; /* Assicurati che la barra occupi tutta la larghezza disponibile */
+  width: 100%; 
 }
 
 .progress-bar {
   height: 100%;
-  background-color: #1db954 !important; /* Colore della barra di progresso */
-  transition: width 0.1s; /* Transizione per rendere il riempimento più fluido */
+  background-color: #1db954 !important; 
+  transition: width 0.1s;
 }

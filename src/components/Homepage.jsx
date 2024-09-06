@@ -10,7 +10,7 @@ const Home = () => {
     'queen',
     'arcticmonkeys',
     'thepolice',
-    'linkinpark',
+    'gorillaz',
     'phil collins',
     
   ]
